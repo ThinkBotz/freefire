@@ -1,0 +1,27 @@
+{
+  "teams": {
+    "team01": { "name": "Team1", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "UnzSi7QdvBdWjQZ7ZGwPhsiJc1p2" },
+    "team02": { "name": "Team2", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "cEGnEytN29bWFTuIepfJnTSGsYd2" },
+    "team03": { "name": "Team3", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "8h4nJF9k9qNue6zC0FrA2kw74WT2" },
+    "team04": { "name": "Team4", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "ZZcM7wDm43S7GPYWgPN02x7JBCo2" },
+    "team05": { "name": "Team5", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "LAE9FJQSX1deQQAQnZbwBsYTcNH3" },
+    "team06": { "name": "Team6", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "2QmDKW95LANGSP9br9XaRcIa61G3" },
+    "team07": { "name": "Team7", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "wqUzOFXg2lbwyg0lLWpoQHX2rP52" },
+    "team08": { "name": "Team8", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "c3xF4tt4jZTcXvxTd9P5pX9MsOK2" },
+    "team09": { "name": "Team9", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "K8YESYHeBFa5kI0ggOeLHLoxLQF2" },
+    "team10": { "name": "Team10", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "ef2r57ufdUfmINjBUplr48njj8C3" },
+    "team11": { "name": "Team11", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "b3JkZwmOktZwX67VDukgZfuG39C3" },
+    "team12": { "name": "Team12", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "SsKspKn3GGQfoGzApcAhcT4lCqv1" },
+    "team13": { "name": "Team13", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "2dIdYGQrxFW4Mz0YUuiOOqK6LG72" },
+    "team14": { "name": "Team14", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "TGKbC8xIfFdeAkgjTIC64lhcgqQ2" },
+    "team15": { "name": "Team15", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "X4TUw2FtqweBnUNUc8MWzDeF93s1" },
+    "team16": { "name": "Team16", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "jO1Dt4xKakbsuuScAEUozebJAQK2" },
+    "team17": { "name": "Team17", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "LZyAWgYkt8MB94vYIMLdgiKuMLE2" },
+    "team18": { "name": "Team18", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "OmbIR6psnvf1vjZuwRXOwmaqH8y1" },
+    "team19": { "name": "Team19", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "tDoMVofFGvZro44pEhikm6PLWME3" },
+    "team20": { "name": "Team20", "kills": 0, "placement": 0, "score": 0, "coordinatorUID": "wOqamR5cTlS29QfYURNRNowQF4h1" }
+  },
+  "admin": {
+    "matchLock": { "locked": false, "lastModified": "" }
+  }
+}

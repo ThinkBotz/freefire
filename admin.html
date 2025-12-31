@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="admin-body">
+    <div class="container">
+        <div class="admin-panel">
+            <div class="header">
+                <h1>🔒 Admin Control Panel</h1>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </div>
+
+            <!-- Match Lock Toggle -->
+            <div class="admin-section">
+                <h2>Match Control</h2>
+                <div class="lock-control">
+                    <div class="lock-status">
+                        <span id="lockStatus">Match is UNLOCKED</span>
+                        <span class="lock-icon" id="lockIcon">🔓</span>
+                    </div>
+                    <button id="toggleLockBtn" class="btn-primary">Lock Match</button>
+                    <p class="help-text">When locked, coordinators cannot update scores</p>
+                </div>
+            </div>
+
+            <!-- Round Configuration -->
+            <div class="admin-section">
+                <h2>🎮 Round Configuration</h2>
+                <div class="round-config">
+                    <div class="config-group">
+                        <h3>Select Teams for This Round</h3>
+                        <p class="help-text">Check/uncheck teams to show them in the leaderboard</p>
+                        <div id="teamCheckboxes" class="team-checkboxes">
+                            <div class="loading">Loading teams...</div>
+                        </div>
+                        <button id="saveTeamsBtn" class="btn-secondary">Save Active Teams</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customize Leaderboard Title -->
+            <div class="admin-section">
+                <h2>📝 Customize Leaderboard Title</h2>
+                <div class="override-form">
+                    <input type="text" id="leaderboardTitleInput" placeholder="Enter leaderboard title" maxlength="100" value="LIVE LEADERBOARD">
+                    <button id="saveLeaderboardTitleBtn" class="btn-secondary">Update Title</button>
+                </div>
+                <p class="help-text">Changes the main heading on the public leaderboard (e.g., "ROUND 1 - LIVE LEADERBOARD")</p>
+            </div>
+
+            <!-- Countdown Timer Control -->
+            <div class="admin-section">
+                <h2>⏱️ Countdown Timer</h2>
+                <div class="timer-controls">
+                    <div class="timer-presets">
+                        <button class="btn-timer" data-minutes="15">15 Min</button>
+                        <button class="btn-timer" data-minutes="20">20 Min</button>
+                        <button class="btn-timer" data-minutes="25">25 Min</button>
+                        <button class="btn-timer" data-minutes="30">30 Min</button>
+                    </div>
+                    <div class="timer-custom">
+                        <input type="number" id="customMinutes" placeholder="Custom minutes" min="1" max="120">
+                        <input type="text" id="timerLabel" placeholder="Timer label (optional)" maxlength="50">
+                        <button id="startCustomTimer" class="btn-success">Start Custom Timer</button>
+                        <button id="stopTimer" class="btn-danger">Stop Timer</button>
+                    </div>
+                </div>
+                <p class="help-text">Sets a visible countdown timer on the public leaderboard. Choose a preset or set custom duration.</p>
+            </div>
+
+            <!-- Score Reset -->
+            <div class="admin-section danger-zone">
+                <h2>⚠️ Danger Zone</h2>
+                
+                <div class="reset-control">
+                    <h3>Reset All Scores</h3>
+                    <p class="help-text">Sets all kills, placement, and scores to zero. Cannot be undone.</p>
+                    <button id="resetAllBtn" class="btn-danger">Reset All Scores</button>
+                </div>
+
+                <div class="reset-control">
+                    <h3>Override Team Score</h3>
+                    <div class="override-form">
+                        <select id="teamSelect">
+                            <option value="">Select Team...</option>
+                        </select>
+                        <input type="number" id="overrideKills" placeholder="Kills" min="0">
+                        <input type="number" id="overridePlacement" placeholder="Placement (1-17)" min="1" max="17">
+                        <button id="overrideBtn" class="btn-warning">Override Score</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Data -->
+            <div class="admin-section">
+                <h2>📥 Export Match Data</h2>
+                <div class="export-controls">
+                    <div class="export-options">
+                        <button id="exportCSVBtn" class="btn-export">
+                            📄 Export to CSV
+                        </button>
+                        <button id="exportJSONBtn" class="btn-export">
+                            📋 Export to JSON
+                        </button>
+                        <button id="exportPrintBtn" class="btn-export">
+                            🖨️ Print Report
+                        </button>
+                    </div>
+                    <p class="help-text">Export current standings for records/analysis</p>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="admin-section">
+                <h2>📊 Quick Stats</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Teams</div>
+                        <div class="stat-value" id="totalTeams">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Teams</div>
+                        <div class="stat-value" id="activeTeams">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Kills</div>
+                        <div class="stat-value" id="totalKills">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Highest Score</div>
+                        <div class="stat-value" id="highestScore">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Last Update</div>
+                        <div class="stat-value" id="lastUpdateTime">--:--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Team List -->
+            <div class="admin-section">
+                <h2>Team Overview</h2>
+                <div id="teamList" class="team-list">
+                    <div class="loading">Loading teams...</div>
+                </div>
+            </div>
+
+            <!-- End Match Section -->
+            <div class="admin-section danger-zone">
+                <h2>🏁 End Match</h2>
+                <p class="help-text">Ending the match will generate a final report with all team data and scores.</p>
+                <button id="endMatchBtn" class="btn-danger" style="width: 100%; padding: 14px;">🏁 End Match & Generate Report</button>
+            </div>
+
+            <!-- Match History -->
+            <div class="admin-section">
+                <h2>📋 Match History & Backups</h2>
+                <p class="help-text">View and download all saved match reports</p>
+                <div id="matchHistoryList" class="match-history">
+                    <div class="loading">Loading match history...</div>
+                </div>
+            </div>
+
+            <!-- Current Team Screenshots -->
+            <div class="admin-section">
+                <h2>📸 Team Screenshots (Current Match)</h2>
+                <p class="help-text">View screenshots submitted by team coordinators</p>
+                <div id="currentScreenshots" class="screenshot-gallery">
+                    <div class="loading">Loading screenshots...</div>
+                </div>
+            </div>
+
+            <div class="link-section">
+                <a href="leaderboard.html" target="_blank">📊 View Public Leaderboard</a>
+            </div>
+
+            <div id="message" class="message"></div>
+        </div>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div id="screenshotModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>📸 Match Screenshots</h2>
+                <button class="modal-close" onclick="closeScreenshotModal()">&times;</button>
+            </div>
+            <div id="screenshotGrid" class="screenshot-grid">
+                <!-- Screenshots will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Leaderboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="leaderboard-body">
+    <div class="leaderboard-container">
+        <header class="leaderboard-header">
+            <h1 id="leaderboardTitle">🏆 LIVE LEADERBOARD</h1>
+            <div class="last-update">Last updated: <span id="lastUpdate">--:--</span></div>
+            <div class="last-update" id="teamCounts">Active teams: --/--</div>
+        </header>
+
+        <div class="leaderboard-layout">
+            <!-- Left Side - Clock and Timer -->
+            <div class="left-sidebar">
+                <!-- Countdown Timer -->
+                <div id="countdownTimer" class="countdown-timer">
+                    <div class="countdown-label">Match Timer</div>
+                    <div class="countdown-display">
+                        <div class="time-unit">
+                            <span class="time-value" id="minutes">00</span>
+                            <span class="time-label">MIN</span>
+                        </div>
+                        <span class="time-separator">:</span>
+                        <div class="time-unit">
+                            <span class="time-value" id="seconds">00</span>
+                            <span class="time-label">SEC</span>
+                        </div>
+                    </div>
+                    <div class="countdown-status" id="timerStatus">Timer not set</div>
+                </div>
+            </div>
+
+            <!-- Right Side - Leaderboard Rankings -->
+            <div class="right-content">
+                <div id="leaderboard" class="leaderboard">
+                    <div class="loading">Loading scores...</div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="leaderboard-footer">
+            <p>Auto-refreshing • No manual reload needed</p>
+        </footer>
+    </div>
+
+    <script type="module" src="js/leaderboard.js"></script>
+</body>
+</html>

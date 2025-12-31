@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinator Panel</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="coordinator-panel">
+            <div class="header">
+                <h1 id="teamName">Loading...</h1>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </div>
+
+            <!-- Push Notification Status -->
+            <div id="notificationStatus" class="notification-status">
+                <span id="notificationIcon">🔔</span>
+                <span id="notificationText">Enable notifications for match updates</span>
+                <button id="enableNotificationsBtn" class="btn-notification">Enable</button>
+            </div>
+
+            <div class="score-card">
+                <h2>Current Score: <span id="currentScore">0</span></h2>
+            </div>
+
+            <form id="updateForm" class="update-form">
+                <!-- Screenshot Upload Section -->
+                <div class="screenshot-section">
+                    <h3>📸 Upload Match Screenshot</h3>
+                    <p class="help-text">Upload a screenshot of the match result before submitting scores</p>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="screenshotInput" accept="image/*" style="display: none;">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">Click or drag image here</div>
+                            <div class="upload-hint">PNG, JPG, WebP (Max 5MB)</div>
+                        </div>
+                        <div class="upload-preview" id="uploadPreview" style="display: none;">
+                            <img id="previewImage" src="" alt="Screenshot preview">
+                            <button type="button" class="btn-remove" id="removeScreenshot">✕ Remove</button>
+                        </div>
+                    </div>
+                    <div id="uploadProgress" class="upload-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Uploading... 0%</div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="kills">Kills</label>
+                    <input type="number" id="kills" min="0" value="0" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="placement">Placement (1-17)</label>
+                    <input type="number" id="placement" min="1" max="17" value="1" required>
+                </div>
+
+                <div class="score-preview">
+                    <p>Points from Kills: <span id="killPoints">0</span></p>
+                    <p>Points from Placement: <span id="placementPoints">0</span></p>
+                    <p class="total">Total Score: <span id="totalPreview">0</span></p>
+                </div>
+
+                <button type="submit" id="submitBtn">Update Score</button>
+                <div id="message" class="message"></div>
+            </form>
+
+            <div class="link-section">
+                <a href="leaderboard.html" target="_blank">📊 View Live Leaderboard</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/coordinator.js"></script>
+</body>
+</html>

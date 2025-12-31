@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Login</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <h1>🔥 Tournament Coordinator Login</h1>
+            
+            <!-- Role Selection -->
+            <div class="role-selector">
+                <button class="role-btn active" data-role="coordinator">Coordinator</button>
+                <button class="role-btn" data-role="admin">Admin</button>
+            </div>
+
+            <!-- Coordinator Login Form (Username + Password) -->
+            <form id="coordinatorForm" class="login-form active">
+                <input type="text" id="coordinatorUsername" placeholder="Username (e.g., team1)" required autocomplete="off">
+                <input type="password" id="coordinatorPassword" placeholder="Password" required>
+                <button type="submit">Login as Coordinator</button>
+                <div id="coordinatorError" class="error-message"></div>
+            </form>
+
+            <!-- Admin Login Form (Email + Password) -->
+            <form id="adminForm" class="login-form">
+                <input type="email" id="adminEmail" placeholder="Admin Email" required>
+                <input type="password" id="adminPassword" placeholder="Password" required>
+                <button type="submit">Login as Admin</button>
+                <div id="adminError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/login.js"></script>
+</body>
+</html>

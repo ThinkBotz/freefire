@@ -1,0 +1,30 @@
+# Firebase
+.firebaserc
+firebase-debug.log
+.firebase/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive files
+CREDENTIALS.txt
+TEAM_UIDS.txt
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+temp/
