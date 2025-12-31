@@ -145,14 +145,17 @@ Your live URL: `https://your-project-id.web.app`
 score = (kills × 1) + placementPoints
 
 Placement Points (BGMI standard):
-1st:  10 pts
-2nd:  6 pts
-3rd:  5 pts
-4th:  4 pts
-5th:  3 pts
-6th:  2 pts
-7-8:  1 pt
-9-17: 0 pts
+1st:  12 pts
+2nd:  9 pts
+3rd:  8 pts
+4th:  7 pts
+5th:  6 pts
+6th:  5 pts
+7th:  4 pts
+8th:  3 pts
+9th:  2 pts
+10th: 1 pt
+11+:  0 pts
 ```
 
 Modify in `js/coordinator.js` → `placementPoints` object.
