@@ -11,10 +11,10 @@ let lastTimerEndTime = null;
 let screenshotFile = null;
 let screenshotURL = null;
 
-// BGMI/PUBG Placement Points (standard)
+// BGMI/PUBG Placement Points (updated)
 const placementPoints = {
     1: 12, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3,
-    9: 2, 10: 1, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0
+    9: 2, 10: 1, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
 };
 
 // Check and request notification permission

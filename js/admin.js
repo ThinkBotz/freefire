@@ -8,10 +8,10 @@ const ADMIN_UID = '2v67e9XQFpYqxzNf0D8g86iDxs33';
 let isMatchLocked = false;
 let teams = [];
 
-// BGMI Placement Points
+// BGMI Placement Points (updated)
 const placementPoints = {
-    1: 10, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2, 7: 1, 8: 1,
-    9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0
+    1: 12, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3,
+    9: 2, 10: 1, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
 };
 
 // Auth check
