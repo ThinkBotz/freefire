@@ -724,13 +724,63 @@ body.admin-body .container {
 .leaderboard-container {
     width: 100%;
     max-width: 1400px;
-    padding: 30px 20px;
+    padding: 0 20px;
     animation: fadeInUp 0.6s ease;
+    margin: 0 auto;
+}
+
+/* Institute Header Section */
+.institute-header {
+    width: 100vw;
+    margin: 0 calc(-50vw + 50%);
+    background: #ffffff;
+    padding: 30px 20px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0;
+}
+
+.institute-bg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.institute-logo {
+    max-width: 100%;
+    height: auto;
+    max-height: 140px;
+    object-fit: contain;
+}
+
+/* League Title Section */
+.league-title-section {
+    width: 100vw;
+    margin: 0 calc(-50vw + 50%);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 40px 20px;
+    text-align: center;
+    border-bottom: 3px solid #00d9ff;
+}
+
+.league-title {
+    font-size: 42px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #00d9ff 0%, #ff00a8 50%, #00d9ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    text-shadow: 0 0 40px rgba(0, 217, 255, 0.3);
+    filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.2));
 }
 
 .leaderboard-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin: 30px 0;
+    padding: 0 20px;
     position: relative;
 }
 
@@ -739,6 +789,7 @@ body.admin-body .container {
     grid-template-columns: 25% 75%;
     gap: 25px;
     align-items: start;
+    padding: 0 20px;
 }
 
 @media (max-width: 1024px) {
@@ -2206,6 +2257,30 @@ body.admin-body .container {
     
     .screenshot-item {
         padding: 15px;
+    }
+    
+    /* Institute Header Responsive */
+    .league-title {
+        font-size: 28px;
+        letter-spacing: 1px;
+    }
+    
+    .institute-logo {
+        max-height: 100px;
+    }
+}
+
+@media (max-width: 768px) {
+    .league-title {
+        font-size: 24px;
+    }
+    
+    .institute-header {
+        padding: 20px 10px;
+    }
+    
+    .league-title-section {
+        padding: 30px 10px;
     }
 }
 
