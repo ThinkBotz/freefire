@@ -486,6 +486,7 @@ body.admin-body .container {
 .score-card h2 {
     font-size: 32px;
     font-weight: 700;
+    margin-bottom: 15px;
 }
 
 .score-card span {
@@ -495,11 +496,44 @@ body.admin-body .container {
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 }
 
-.update-form {
-    margin-top: 25px;
+.round-scores-display {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 15px;
+    flex-wrap: wrap;
 }
 
-.input-group {
+.round-score-item {
+    background: rgba(0, 217, 255, 0.1);
+    border: 1px solid rgba(0, 217, 255, 0.3);
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.input-group select {
+    width: 100%;
+    padding: 15px 18px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.input-group select {
+    cursor: pointer;
+}
+
+.input-group select option {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.input-group input:focus,
+.input-group selec
     margin-bottom: 20px;
 }
 
@@ -761,6 +795,9 @@ body.admin-body .container {
     padding: 40px 20px;
     text-align: center;
     border-bottom: 3px solid #00d9ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .league-title {
@@ -772,9 +809,11 @@ body.admin-body .container {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin: 0;
+    margin: 0 auto;
     text-shadow: 0 0 40px rgba(0, 217, 255, 0.3);
     filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.2));
+    text-align: center;
+    width: 100%;
 }
 
 .leaderboard-header {
@@ -1133,7 +1172,7 @@ body.admin-body .container {
 
 .team-row {
     display: grid;
-    grid-template-columns: 60px 1fr 90px 90px 110px;
+    grid-template-columns: 60px 1fr 2fr 110px;
     gap: 15px;
     padding: 16px 20px;
     margin-bottom: 10px;
@@ -1215,6 +1254,34 @@ body.admin-body .container {
 .team-name {
     font-size: 17px;
     font-weight: 700;
+}
+
+.round-scores {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.round-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 6px 12px;
+    background: rgba(0, 217, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 217, 255, 0.2);
+}
+
+.round-label {
+    font-weight: 700;
+    color: #00d9ff;
+    font-size: 12px;
+}
+
+.round-data {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
 }
 
 .kills, .placement, .score {

@@ -405,9 +405,40 @@ async function loadTeamData(uid) {
 // Update UI
 function updateUI(data) {
     document.getElementById('teamName').textContent = data.name || 'Team';
-    document.getElementById('currentScore').textContent = data.score || 0;
-    document.getElementById('kills').value = data.kills || 0;
-    document.getElementById('placement').value = (data.placement ?? '') === 0 ? '' : (data.placement || '');
+    
+    // Display total score and individual round scores
+    const totalScore = data.score || 0;
+    const r1Score = data.round1Score || 0;
+    const r2Score = data.round2Score || 0;
+    
+    document.getElementById('currentScore').textContent = totalScore;
+    document.getElementById('round1Score').textContent = r1Score;
+    document.getElementById('round2Score').textContent = r2Score;
+    
+    // Load the selected round's data
+    const selectedRound = document.getElementById('roundSelect').value;
+    if (selectedRound === '1') {
+        document.getElementById('kills').value = data.round1Kills || 0;
+        document.getElementById('placement').value = (data.round1Placement ?? '') === 0 ? '' : (data.round1Placement || '');
+    } else {
+        document.getElementById('kills').value = data.round2Kills || 0;
+        document.getElementById('placement').value = (data.round2Placement ?? '') === 0 ? '' : (data.round2Placement || '');
+    }
+    
+    calculatePreview();
+}
+
+// Load round data when round selector changes
+function loadRoundData() {
+    const selectedRound = document.getElementById('roundSelect').value;
+    
+    if (selectedRound === '1') {
+        document.getElementById('kills').value = currentData.round1Kills || 0;
+        document.getElementById('placement').value = (currentData.round1Placement ?? '') === 0 ? '' : (currentData.round1Placement || '');
+    } else {
+        document.getElementById('kills').value = currentData.round2Kills || 0;
+        document.getElementById('placement').value = (currentData.round2Placement ?? '') === 0 ? '' : (currentData.round2Placement || '');
+    }
     
     calculatePreview();
 }
@@ -416,8 +447,9 @@ function updateUI(data) {
 function calculatePreview() {
     const kills = parseInt(document.getElementById('kills').value) || 0;
     const placement = parseInt(document.getElementById('placement').value) || 0;
+    const selectedRound = document.getElementById('roundSelect').value;
     
-    const killPts = kills * 1; // 1 point per kill (adjust as needed)
+    const killPts = kills * 1; // 1 point per kill
     const placePts = placementPoints[placement] || 0;
     const total = killPts + placePts;
     
@@ -425,14 +457,21 @@ function calculatePreview() {
     document.getElementById('placementPoints').textContent = placePts;
     document.getElementById('totalPreview').textContent = total;
     
-    // Enable/disable submit button
-    const changed = kills !== (currentData.kills || 0) || placement !== (currentData.placement || 0);
+    // Enable/disable submit button based on whether data has changed
+    let changed = false;
+    if (selectedRound === '1') {
+        changed = kills !== (currentData.round1Kills || 0) || placement !== (currentData.round1Placement || 0);
+    } else {
+        changed = kills !== (currentData.round2Kills || 0) || placement !== (currentData.round2Placement || 0);
+    }
+    
     document.getElementById('submitBtn').disabled = !changed;
 }
 
 // Input listeners
 document.getElementById('kills').addEventListener('input', calculatePreview);
 document.getElementById('placement').addEventListener('input', calculatePreview);
+document.getElementById('roundSelect').addEventListener('change', loadRoundData);
 
 // Submit form
 document.getElementById('updateForm').addEventListener('submit', async (e) => {
@@ -448,7 +487,8 @@ document.getElementById('updateForm').addEventListener('submit', async (e) => {
     
     const kills = parseInt(document.getElementById('kills').value) || 0;
     const placement = parseInt(document.getElementById('placement').value) || 0;
-    const score = parseInt(document.getElementById('totalPreview').textContent);
+    const roundScore = parseInt(document.getElementById('totalPreview').textContent);
+    const selectedRound = document.getElementById('roundSelect').value;
     
     const messageDiv = document.getElementById('message');
     const submitBtn = document.getElementById('submitBtn');
@@ -467,13 +507,27 @@ document.getElementById('updateForm').addEventListener('submit', async (e) => {
             console.log('No screenshot file selected');
         }
         
-        // Prepare update data
+        // Prepare update data based on selected round
         const updateData = {
-            kills,
-            placement,
-            score,
             lastUpdated: new Date().toISOString()
         };
+        
+        // Update the specific round
+        if (selectedRound === '1') {
+            updateData.round1Kills = kills;
+            updateData.round1Placement = placement;
+            updateData.round1Score = roundScore;
+            // Recalculate total score
+            const r2Score = currentData.round2Score || 0;
+            updateData.score = roundScore + r2Score;
+        } else {
+            updateData.round2Kills = kills;
+            updateData.round2Placement = placement;
+            updateData.round2Score = roundScore;
+            // Recalculate total score
+            const r1Score = currentData.round1Score || 0;
+            updateData.score = r1Score + roundScore;
+        }
         
         // Add screenshot URL if uploaded
         if (uploadedScreenshotURL) {
@@ -487,8 +541,8 @@ document.getElementById('updateForm').addEventListener('submit', async (e) => {
         console.log('Team document updated successfully');
         
         messageDiv.textContent = uploadedScreenshotURL 
-            ? '✅ Score and screenshot updated successfully!'
-            : '✅ Score updated successfully!';
+            ? `✅ Round ${selectedRound} score and screenshot updated successfully!`
+            : `✅ Round ${selectedRound} score updated successfully!`;
         messageDiv.className = 'message success';
         
         // Clear screenshot preview after successful submission

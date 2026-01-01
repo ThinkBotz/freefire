@@ -132,13 +132,34 @@ function renderLeaderboard(teams) {
         const rank = index + 1;
         const rankClass = rank <= 3 ? `rank-${rank}` : '';
         
+        // Round 1 data
+        const r1Kills = team.round1Kills || 0;
+        const r1Placement = team.round1Placement || 0;
+        const r1Score = team.round1Score || 0;
+        
+        // Round 2 data
+        const r2Kills = team.round2Kills || 0;
+        const r2Placement = team.round2Placement || 0;
+        const r2Score = team.round2Score || 0;
+        
+        // Total score (sum of both rounds)
+        const totalScore = team.score || 0;
+        
         return `
             <div class="team-row ${rankClass}">
                 <div class="rank">#${rank}</div>
                 <div class="team-name">${team.name || team.id}</div>
-                <div class="kills">${team.kills || 0} K</div>
-                <div class="placement">P${team.placement || '-'}</div>
-                <div class="score">${team.score || 0} pts</div>
+                <div class="round-scores">
+                    <div class="round-info">
+                        <span class="round-label">R1:</span>
+                        <span class="round-data">${r1Kills}K + P${r1Placement} = ${r1Score}</span>
+                    </div>
+                    <div class="round-info">
+                        <span class="round-label">R2:</span>
+                        <span class="round-data">${r2Kills}K + P${r2Placement} = ${r2Score}</span>
+                    </div>
+                </div>
+                <div class="score">${totalScore} pts</div>
             </div>
         `;
     }).join('');

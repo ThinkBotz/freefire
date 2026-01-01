@@ -22,10 +22,29 @@
             </div>
 
             <div class="score-card">
-                <h2>Current Score: <span id="currentScore">0</span></h2>
+                <h2>Total Score: <span id="currentScore">0</span></h2>
+                <div class="round-scores-display">
+                    <div class="round-score-item">
+                        <span class="round-label">Round 1:</span>
+                        <span id="round1Score">0</span> pts
+                    </div>
+                    <div class="round-score-item">
+                        <span class="round-label">Round 2:</span>
+                        <span id="round2Score">0</span> pts
+                    </div>
+                </div>
             </div>
 
             <form id="updateForm" class="update-form">
+                <!-- Round Selector -->
+                <div class="input-group">
+                    <label for="roundSelect">Select Round</label>
+                    <select id="roundSelect" required>
+                        <option value="1">Round 1</option>
+                        <option value="2">Round 2</option>
+                    </select>
+                </div>
+
                 <!-- Screenshot Upload Section -->
                 <div class="screenshot-section">
                     <h3>📸 Upload Match Screenshot</h3>

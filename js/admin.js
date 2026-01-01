@@ -152,17 +152,24 @@ function renderTeamList() {
         return;
     }
     
-    container.innerHTML = teams.map((team, index) => `
+    container.innerHTML = teams.map((team, index) => {
+        const r1Score = team.round1Score || 0;
+        const r2Score = team.round2Score || 0;
+        const totalScore = team.score || 0;
+        
+        return `
         <div class="admin-team-row">
             <div class="team-rank">#${index + 1}</div>
             <div class="team-info">
                 <div class="team-name-admin">${team.name || team.id}</div>
                 <div class="team-details">
-                    K: ${team.kills || 0} | P: ${team.placement || '-'} | Score: ${team.score || 0}
+                    R1: ${team.round1Kills || 0}K + P${team.round1Placement || 0} = ${r1Score} | 
+                    R2: ${team.round2Kills || 0}K + P${team.round2Placement || 0} = ${r2Score} | 
+                    Total: ${totalScore}
                 </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 // Update stats
@@ -174,7 +181,11 @@ function updateStats() {
         activeTeamsEl.textContent = activeTeamsCount;
     }
     
-    const totalKills = teams.reduce((sum, team) => sum + (team.kills || 0), 0);
+    const totalKills = teams.reduce((sum, team) => {
+        const r1Kills = team.round1Kills || 0;
+        const r2Kills = team.round2Kills || 0;
+        return sum + r1Kills + r2Kills;
+    }, 0);
     document.getElementById('totalKills').textContent = totalKills;
     
     const highest = teams.length > 0 ? teams[0].score || 0 : 0;
@@ -228,8 +239,12 @@ async function resetAllScores() {
         teams.forEach(team => {
             const teamRef = doc(db, 'teams', team.id);
             batch.set(teamRef, {
-                kills: 0,
-                placement: 0,
+                round1Kills: 0,
+                round1Placement: 0,
+                round1Score: 0,
+                round2Kills: 0,
+                round2Placement: 0,
+                round2Score: 0,
                 score: 0,
                 screenshotURL: null,
                 screenshotTimestamp: null
@@ -238,7 +253,14 @@ async function resetAllScores() {
         
         await batch.commit();
         // Immediately reflect cleared state in UI while Firestore snapshot catches up
-        teams = teams.map(t => ({ ...t, kills: 0, placement: 0, score: 0, screenshotURL: null, screenshotTimestamp: null }));
+        teams = teams.map(t => ({ 
+            ...t, 
+            round1Kills: 0, round1Placement: 0, round1Score: 0,
+            round2Kills: 0, round2Placement: 0, round2Score: 0,
+            score: 0, 
+            screenshotURL: null, 
+            screenshotTimestamp: null 
+        }));
         renderTeamList();
         updateStats();
         populateTeamSelect();
@@ -264,30 +286,62 @@ async function overrideTeamScore() {
         return;
     }
     
-    if (placement < 1 || placement > 17) {
-        showMessage('Placement must be 1-17.', 'error');
+    if (placement < 1 || placement > 20) {
+        showMessage('Placement must be 1-20.', 'error');
         return;
     }
     
-    const score = (kills * 1) + (placementPoints[placement] || 0);
+    // Ask which round to update
+    const round = window.prompt('Which round to update? Enter 1 or 2:');
+    
+    if (round !== '1' && round !== '2') {
+        showMessage('Invalid round. Must be 1 or 2.', 'error');
+        return;
+    }
+    
+    const roundScore = (kills * 1) + (placementPoints[placement] || 0);
     
     const confirm = window.confirm(
-        `Override ${teamId}?\n\n` +
+        `Override ${teamId} Round ${round}?\n\n` +
         `Kills: ${kills}\n` +
         `Placement: ${placement}\n` +
-        `Total Score: ${score}`
+        `Round Score: ${roundScore}`
     );
     
     if (!confirm) return;
     
     try {
-        await updateDoc(doc(db, 'teams', teamId), {
-            kills,
-            placement,
-            score
-        });
+        const teamRef = doc(db, 'teams', teamId);
+        const teamDoc = await getDoc(teamRef);
         
-        showMessage(`✅ ${teamId} score overridden.`, 'success');
+        if (!teamDoc.exists()) {
+            showMessage('Team not found.', 'error');
+            return;
+        }
+        
+        const teamData = teamDoc.data();
+        
+        // Update the specific round
+        const updateData = {};
+        if (round === '1') {
+            updateData.round1Kills = kills;
+            updateData.round1Placement = placement;
+            updateData.round1Score = roundScore;
+            // Recalculate total score
+            const r2Score = teamData.round2Score || 0;
+            updateData.score = roundScore + r2Score;
+        } else {
+            updateData.round2Kills = kills;
+            updateData.round2Placement = placement;
+            updateData.round2Score = roundScore;
+            // Recalculate total score
+            const r1Score = teamData.round1Score || 0;
+            updateData.score = r1Score + roundScore;
+        }
+        
+        await updateDoc(teamRef, updateData);
+        
+        showMessage(`✅ ${teamId} Round ${round} score updated.`, 'success');
         
         // Clear form
         document.getElementById('teamSelect').value = '';
@@ -356,10 +410,10 @@ function exportToCSV() {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
         const filename = `tournament_standings_${timestamp}.csv`;
         
-        let csv = 'Rank,Team Name,Kills,Placement,Score\n';
+        let csv = 'Rank,Team Name,R1 Kills,R1 Placement,R1 Score,R2 Kills,R2 Placement,R2 Score,Total Score\n';
         
         activeTeams.forEach((team, index) => {
-            csv += `${index + 1},"${team.name || team.id}",${team.kills || 0},${team.placement || '-'},${team.score || 0}\n`;
+            csv += `${index + 1},"${team.name || team.id}",${team.round1Kills || 0},${team.round1Placement || 0},${team.round1Score || 0},${team.round2Kills || 0},${team.round2Placement || 0},${team.round2Score || 0},${team.score || 0}\n`;
         });
         
         console.log('CSV generated, length:', csv.length);
@@ -395,14 +449,26 @@ function exportToJSON() {
             exportedAt: new Date().toISOString(),
             tournamentName: 'Free Fire Tournament',
             totalTeams: activeTeams.length,
-            totalKills: activeTeams.reduce((sum, t) => sum + (t.kills || 0), 0),
+            totalKills: activeTeams.reduce((sum, t) => {
+                const r1K = t.round1Kills || 0;
+                const r2K = t.round2Kills || 0;
+                return sum + r1K + r2K;
+            }, 0),
             teams: activeTeams.map((team, index) => ({
                 rank: index + 1,
                 teamId: team.id,
                 teamName: team.name || team.id,
-                kills: team.kills || 0,
-                placement: team.placement || 0,
-                score: team.score || 0
+                round1: {
+                    kills: team.round1Kills || 0,
+                    placement: team.round1Placement || 0,
+                    score: team.round1Score || 0
+                },
+                round2: {
+                    kills: team.round2Kills || 0,
+                    placement: team.round2Placement || 0,
+                    score: team.round2Score || 0
+                },
+                totalScore: team.score || 0
             }))
         };
         
@@ -533,8 +599,8 @@ function exportToPrint() {
                         <tr>
                             <th>Rank</th>
                             <th>Team Name</th>
-                            <th>Kills</th>
-                            <th>Placement</th>
+                            <th>R1</th>
+                            <th>R2</th>
                             <th>Total Score</th>
                         </tr>
                     </thead>
@@ -543,8 +609,8 @@ function exportToPrint() {
                             <tr class="${index < 3 ? 'rank-' + (index + 1) : ''}">
                                 <td><strong>#${index + 1}</strong></td>
                                 <td>${team.name || team.id}</td>
-                                <td>${team.kills || 0}</td>
-                                <td>${team.placement || '-'}</td>
+                                <td>${team.round1Kills || 0}K+P${team.round1Placement || 0}=${team.round1Score || 0}</td>
+                                <td>${team.round2Kills || 0}K+P${team.round2Placement || 0}=${team.round2Score || 0}</td>
                                 <td><strong>${team.score || 0}</strong></td>
                             </tr>
                         `).join('')}
@@ -619,15 +685,23 @@ async function createRoundBackup(reason = 'manual') {
         totals: {
             teams: teams.length,
             activeTeams: activeTeams.length,
-            totalKills: teams.reduce((sum, t) => sum + (Number(t.kills) || 0), 0),
+            totalKills: teams.reduce((sum, t) => {
+                const r1K = Number(t.round1Kills) || 0;
+                const r2K = Number(t.round2Kills) || 0;
+                return sum + r1K + r2K;
+            }, 0),
             highestScore: teams.length > 0 ? teams[0].score || 0 : 0
         },
         teams: teams.map((team, index) => ({
             rank: index + 1,
             id: team.id,
             name: team.name || team.id,
-            kills: Number(team.kills) || 0,
-            placement: Number(team.placement) || 0,
+            round1Kills: Number(team.round1Kills) || 0,
+            round1Placement: Number(team.round1Placement) || 0,
+            round1Score: Number(team.round1Score) || 0,
+            round2Kills: Number(team.round2Kills) || 0,
+            round2Placement: Number(team.round2Placement) || 0,
+            round2Score: Number(team.round2Score) || 0,
             score: Number(team.score) || 0,
             isActive: team.isActive !== false,
             members: team.members || {},
@@ -685,8 +759,12 @@ async function restoreBackupData(backupData) {
         const teamRef = doc(db, 'teams', teamId);
         batch.set(teamRef, {
             name: team.teamName || team.name || teamId,
-            kills: Number(team.kills) || 0,
-            placement: Number(team.placement) || 0,
+            round1Kills: Number(team.round1Kills) || 0,
+            round1Placement: Number(team.round1Placement) || 0,
+            round1Score: Number(team.round1Score) || 0,
+            round2Kills: Number(team.round2Kills) || 0,
+            round2Placement: Number(team.round2Placement) || 0,
+            round2Score: Number(team.round2Score) || 0,
             score: Number(team.score) || 0,
             isActive: team.isActive !== false,
             members: team.members || {},
@@ -957,7 +1035,11 @@ async function endMatch() {
             matchData: {
                 totalTeams: teams.length,
                 activeTeams: teams.filter(t => t.isActive !== false).length,
-                totalKills: teams.reduce((sum, t) => sum + (t.kills || 0), 0),
+                totalKills: teams.reduce((sum, t) => {
+                    const r1K = t.round1Kills || 0;
+                    const r2K = t.round2Kills || 0;
+                    return sum + r1K + r2K;
+                }, 0),
                 highestScore: teams.length > 0 ? teams[0].score : 0
             },
             teams: teams.map((team, index) => {
@@ -966,8 +1048,12 @@ async function endMatch() {
                     rank: index + 1,
                     teamId: team.id,
                     teamName: team.name || team.id,
-                    kills: team.kills || 0,
-                    placement: team.placement || 0,
+                    round1Kills: team.round1Kills || 0,
+                    round1Placement: team.round1Placement || 0,
+                    round1Score: team.round1Score || 0,
+                    round2Kills: team.round2Kills || 0,
+                    round2Placement: team.round2Placement || 0,
+                    round2Score: team.round2Score || 0,
                     score: team.score || 0,
                     isActive: team.isActive !== false,
                     members: team.members || {},
@@ -1021,7 +1107,7 @@ function generateMatchReport(reportData) {
     csv += `Total Teams,Active Teams,Total Kills,Highest Score\n`;
     csv += `${reportData.matchData.totalTeams},${reportData.matchData.activeTeams},${reportData.matchData.totalKills},${reportData.matchData.highestScore}\n\n`;
     csv += 'TEAM STANDINGS\n';
-    csv += 'Rank,Team Name,Kills,Placement,Score,Active,Player1,Player2,Player3,Player4\n';
+    csv += 'Rank,Team Name,R1 Kills,R1 Placement,R1 Score,R2 Kills,R2 Placement,R2 Score,Total Score,Active,Player1,Player2,Player3,Player4\n';
     
     reportData.teams.forEach(team => {
         const members = team.members || {};
@@ -1029,7 +1115,7 @@ function generateMatchReport(reportData) {
         for (let i = 1; i <= 4; i++) {
             playerNames.push(members[`player${i}`]?.username || '');
         }
-        csv += `${team.rank},"${team.teamName}",${team.kills},${team.placement},${team.score},${team.isActive ? 'Yes' : 'No'},"${playerNames.join('","')}"\n`;
+        csv += `${team.rank},"${team.teamName}",${team.round1Kills},${team.round1Placement},${team.round1Score},${team.round2Kills},${team.round2Placement},${team.round2Score},${team.score},${team.isActive ? 'Yes' : 'No'},"${playerNames.join('","')}"\n`;
     });
     
     // Download CSV
@@ -1166,8 +1252,8 @@ async function loadTeamScreenshotsFromFirestore(container) {
                         teamName: team.name || team.id,
                         teamRank: teams.findIndex(t => t.id === team.id) + 1,
                         teamScore: team.score || 0,
-                        teamKills: team.kills || 0,
-                        teamPlacement: team.placement || '-',
+                        round1Score: team.round1Score || 0,
+                        round2Score: team.round2Score || 0,
                         screenshotId: doc.id,
                         ...data
                     });
@@ -1197,7 +1283,7 @@ async function loadTeamScreenshotsFromFirestore(container) {
                         <div>
                             <h4 style="color: #00d9ff; margin: 0 0 5px 0;">Rank #${screenshot.teamRank}: ${screenshot.teamName}</h4>
                             <p style="margin: 0; color: #aaa; font-size: 13px;">
-                                Score: ${screenshot.teamScore} | Kills: ${screenshot.teamKills} | Placement: ${screenshot.teamPlacement}
+                                Total: ${screenshot.teamScore} (R1: ${screenshot.round1Score || 0} | R2: ${screenshot.round2Score || 0})
                             </p>
                             <p style="margin: 5px 0 0 0; color: #888; font-size: 12px;">📅 ${uploadTime}</p>
                         </div>
@@ -1206,9 +1292,9 @@ async function loadTeamScreenshotsFromFirestore(container) {
                         <img src="${screenshot.data}" alt="${screenshot.teamName} screenshot" loading="lazy">
                     </div>
                     <div class="screenshot-card-actions">
-                        <a href="${screenshot.data}" target="_blank" class="btn-secondary" style="text-decoration: none; display: inline-block; padding: 8px 15px; font-size: 13px; text-align: center; flex: 1;">
+                        <button class="btn-secondary" style="padding: 8px 15px; font-size: 13px; cursor: pointer; flex: 1;" onclick="openScreenshot('${screenshot.data}', '${screenshot.teamName}_screenshot.jpg')">
                             🔗 View Full Size
-                        </a>
+                        </button>
                         <button class="btn-secondary" style="padding: 8px 15px; font-size: 13px; cursor: pointer; flex: 1;" onclick="downloadBase64('${screenshot.data}', '${screenshot.teamName}_screenshot.jpg')">
                             📥 Download
                         </button>
@@ -1241,6 +1327,31 @@ window.downloadBase64 = function(base64String, filename) {
     document.body.removeChild(link);
 };
 
+// Open screenshot in a new tab to avoid data URL navigation limits
+window.openScreenshot = function(base64String, filename) {
+    try {
+        const viewer = window.open('', '_blank');
+        if (!viewer) {
+            alert('Please allow popups to view the full-size screenshot.');
+            return;
+        }
+
+        viewer.document.title = filename || 'Screenshot';
+        viewer.document.body.style.margin = '0';
+        viewer.document.body.style.background = '#000';
+
+        const img = viewer.document.createElement('img');
+        img.src = base64String;
+        img.alt = filename || 'Screenshot';
+        img.style.cssText = 'width:100%;height:auto;display:block;object-fit:contain;background:#000;';
+
+        viewer.document.body.appendChild(img);
+    } catch (error) {
+        console.error('Error opening screenshot:', error);
+        alert('Unable to open the screenshot. Please try downloading instead.');
+    }
+};
+
 // Download individual match report as CSV
 function downloadMatchReportCSV(report, title) {
     let csv = 'MATCH FINAL REPORT\n';
@@ -1249,10 +1360,10 @@ function downloadMatchReportCSV(report, title) {
     csv += `Total Teams,Active Teams,Total Kills,Highest Score\n`;
     csv += `${report.matchData.totalTeams},${report.matchData.activeTeams},${report.matchData.totalKills},${report.matchData.highestScore}\n\n`;
     csv += 'TEAM STANDINGS\n';
-    csv += 'Rank,Team Name,Kills,Placement,Score,Active\n';
+    csv += 'Rank,Team Name,R1 Kills,R1 Placement,R1 Score,R2 Kills,R2 Placement,R2 Score,Total Score,Active\n';
     
     report.teams.forEach(team => {
-        csv += `${team.rank},"${team.teamName}",${team.kills},${team.placement},${team.score},${team.isActive ? 'Yes' : 'No'}\n`;
+        csv += `${team.rank},"${team.teamName}",${team.round1Kills || 0},${team.round1Placement || 0},${team.round1Score || 0},${team.round2Kills || 0},${team.round2Placement || 0},${team.round2Score || 0},${team.score},${team.isActive ? 'Yes' : 'No'}\n`;
     });
     
     // Download CSV with leaderboard title as filename
