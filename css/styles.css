@@ -647,7 +647,7 @@ body.admin-body .container {
 }
 
 .message.success::before {
-    content: 'ԣ�';
+    content: 'ԣ�';
     display: flex;
     align-items: center;
     justify-content: center;
@@ -669,7 +669,7 @@ body.admin-body .container {
 }
 
 .message.error::before {
-    content: 'ԣ�';
+    content: 'ԣ�';
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1070,26 +1070,7 @@ body.admin-body .container {
     padding: 25px;
     backdrop-filter: blur(20px);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    max-height: calc(100vh - 200px);
-    overflow-y: auto;
-}
-
-.leaderboard::-webkit-scrollbar {
-    width: 8px;
-}
-
-.leaderboard::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-}
-
-.leaderboard::-webkit-scrollbar-thumb {
-    background: rgba(0, 217, 255, 0.3);
-    border-radius: 10px;
-}
-
-.leaderboard::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 217, 255, 0.5);
+    /* Removed max-height and overflow to show all teams directly */
 }
 
 .loading {
