@@ -17,12 +17,35 @@ service cloud.firestore {
             && (!exists(/databases/$(database)/documents/admin/matchLock) 
                 || !get(/databases/$(database)/documents/admin/matchLock).data.locked))
       );
+      
+      // Screenshots subcollection - coordinators can upload to their team
+      match /screenshots/{screenshotId} {
+        allow read: if true;
+        allow create: if request.auth != null && (
+          // Admin can always upload
+          request.auth.uid == '2v67e9XQFpYqxzNf0D8g86iDxs33'
+          // OR coordinator can upload to their team
+          || get(/databases/$(database)/documents/teams/$(teamId)).data.coordinatorUID == request.auth.uid
+        );
+        allow update, delete: if request.auth != null && (
+          request.auth.uid == '2v67e9XQFpYqxzNf0D8g86iDxs33'
+          || get(/databases/$(database)/documents/teams/$(teamId)).data.coordinatorUID == request.auth.uid
+        );
+      }
     }
     
-    // Admin collection (optional - for match lock, etc.)
+    // Admin collection (match lock, settings, match reports)
     match /admin/{document=**} {
       allow read: if true;
-      // Only specific admin UIDs can write (replace with actual admin UID)
+      // Only admin UID can write
+      allow write: if request.auth != null 
+        && request.auth.uid == '2v67e9XQFpYqxzNf0D8g86iDxs33';
+    }
+    
+    // Round backups collection - admin only
+    match /roundBackups/{backupId} {
+      allow read: if request.auth != null 
+        && request.auth.uid == '2v67e9XQFpYqxzNf0D8g86iDxs33';
       allow write: if request.auth != null 
         && request.auth.uid == '2v67e9XQFpYqxzNf0D8g86iDxs33';
     }

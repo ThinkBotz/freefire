@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, writeBatch, onSnapshot, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, writeBatch, onSnapshot, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 // Admin UID - REPLACE THIS with your actual admin Firebase Auth UID
 const ADMIN_UID = '2v67e9XQFpYqxzNf0D8g86iDxs33';
@@ -219,20 +219,34 @@ async function resetAllScores() {
     }
     
     try {
+        // Take a full backup before wiping scores so the round can be restored/imported later
+        const backupInfo = await createRoundBackup('reset-all');
+        console.log('Backup created before reset:', backupInfo);
+
         const batch = writeBatch(db);
         
         teams.forEach(team => {
             const teamRef = doc(db, 'teams', team.id);
-            batch.update(teamRef, {
+            batch.set(teamRef, {
                 kills: 0,
                 placement: 0,
-                score: 0
-            });
+                score: 0,
+                screenshotURL: null,
+                screenshotTimestamp: null
+            }, { merge: true });
         });
         
         await batch.commit();
+        // Immediately reflect cleared state in UI while Firestore snapshot catches up
+        teams = teams.map(t => ({ ...t, kills: 0, placement: 0, score: 0, screenshotURL: null, screenshotTimestamp: null }));
+        renderTeamList();
+        updateStats();
+        populateTeamSelect();
+        await clearRoundArtifacts();
+        loadMatchHistory();
+        loadCurrentScreenshots();
         
-        showMessage('✅ All scores reset to zero.', 'success');
+        showMessage('✅ All scores reset to zero. Backup saved for this round.', 'success');
     } catch (error) {
         console.error('Error resetting scores:', error);
         showMessage('Failed to reset scores. Check console.', 'error');
@@ -580,6 +594,181 @@ function downloadFile(content, filename, mimeType) {
     }
 }
 
+// Build and persist a full round backup (Firestore + JSON download)
+async function createRoundBackup(reason = 'manual') {
+    if (!Array.isArray(teams) || teams.length === 0) {
+        console.warn('Backup requested but no teams are loaded.');
+    }
+
+    const now = new Date();
+    const timestampSafe = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const leaderboardTitle = (document.getElementById('leaderboardTitleInput')?.value || 'LIVE LEADERBOARD').trim();
+    const activeTeams = teams.filter(team => team.isActive !== false);
+
+    // Capture reports and screenshots
+    const matchReportsDoc = await getDoc(doc(db, 'admin', 'matchReports'));
+    const matchReports = matchReportsDoc.exists() ? (matchReportsDoc.data().reports || []) : [];
+    const screenshots = await fetchAllScreenshotsForBackup();
+
+    const snapshot = {
+        backupType: 'round',
+        reason,
+        createdAt: now.toISOString(),
+        createdAtMillis: now.getTime(),
+        leaderboardTitle,
+        totals: {
+            teams: teams.length,
+            activeTeams: activeTeams.length,
+            totalKills: teams.reduce((sum, t) => sum + (Number(t.kills) || 0), 0),
+            highestScore: teams.length > 0 ? teams[0].score || 0 : 0
+        },
+        teams: teams.map((team, index) => ({
+            rank: index + 1,
+            id: team.id,
+            name: team.name || team.id,
+            kills: Number(team.kills) || 0,
+            placement: Number(team.placement) || 0,
+            score: Number(team.score) || 0,
+            isActive: team.isActive !== false,
+            members: team.members || {},
+            screenshotURL: team.screenshotURL || null,
+            screenshotTimestamp: team.screenshotTimestamp || null
+        })),
+        matchReports,
+        screenshots
+    };
+
+    const docRef = await addDoc(collection(db, 'roundBackups'), snapshot);
+    const json = JSON.stringify({ backupId: docRef.id, ...snapshot }, null, 2);
+    const filename = `round_backup_${timestampSafe}.json`;
+    downloadFile(json, filename, 'application/json');
+
+    return { backupId: docRef.id, filename };
+}
+
+async function fetchAllScreenshotsForBackup() {
+    const allScreenshots = [];
+    for (const team of teams) {
+        try {
+            const snapshot = await getDocs(collection(db, 'teams', team.id, 'screenshots'));
+            snapshot.forEach((docSnap) => {
+                allScreenshots.push({
+                    teamId: team.id,
+                    screenshotId: docSnap.id,
+                    ...docSnap.data()
+                });
+            });
+        } catch (error) {
+            console.log('No screenshots for team during backup:', team.id, error.message);
+        }
+    }
+    return allScreenshots;
+}
+
+// Restore teams + screenshots + reports from a backup JSON object
+async function restoreBackupData(backupData) {
+    if (!backupData || !Array.isArray(backupData.teams)) {
+        throw new Error('Invalid backup file: teams array missing.');
+    }
+
+    // Clear current screenshots before restore
+    await clearAllScreenshots();
+
+    const batch = writeBatch(db);
+    let restoredCount = 0;
+
+    backupData.teams.forEach((team) => {
+        const teamId = team.teamId || team.id;
+        if (!teamId) return;
+
+        restoredCount += 1;
+        const teamRef = doc(db, 'teams', teamId);
+        batch.set(teamRef, {
+            name: team.teamName || team.name || teamId,
+            kills: Number(team.kills) || 0,
+            placement: Number(team.placement) || 0,
+            score: Number(team.score) || 0,
+            isActive: team.isActive !== false,
+            members: team.members || {},
+            screenshotURL: team.screenshotURL || null,
+            screenshotTimestamp: team.screenshotTimestamp || null
+        }, { merge: true });
+    });
+
+    if (restoredCount === 0) {
+        throw new Error('No teams found in backup file.');
+    }
+
+    await batch.commit();
+
+    // Restore screenshots (batch in chunks to avoid limits)
+    if (Array.isArray(backupData.screenshots) && backupData.screenshots.length > 0) {
+        const chunkSize = 400;
+        for (let i = 0; i < backupData.screenshots.length; i += chunkSize) {
+            const chunk = backupData.screenshots.slice(i, i + chunkSize);
+            const chunkBatch = writeBatch(db);
+            chunk.forEach((shot) => {
+                if (!shot.teamId || !shot.screenshotId) return;
+                const ref = doc(db, 'teams', shot.teamId, 'screenshots', shot.screenshotId);
+                const { teamId, screenshotId, ...rest } = shot;
+                chunkBatch.set(ref, rest);
+            });
+            await chunkBatch.commit();
+        }
+    }
+
+    // Restore match reports
+    if (Array.isArray(backupData.matchReports)) {
+        await setDoc(doc(db, 'admin', 'matchReports'), { reports: backupData.matchReports });
+    }
+
+    if (backupData.leaderboardTitle) {
+        await setDoc(doc(db, 'admin', 'settings'), { leaderboardTitle: backupData.leaderboardTitle }, { merge: true });
+    }
+
+    return restoredCount;
+}
+
+// Handle file input for backup restore
+function handleBackupFileSelection(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const parsed = JSON.parse(e.target?.result || '{}');
+            const restoredCount = await restoreBackupData(parsed);
+            showMessage(`✅ Restored ${restoredCount} team(s) from backup`, 'success');
+        } catch (error) {
+            console.error('Backup import failed:', error);
+            showMessage('Failed to import backup: ' + error.message, 'error');
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsText(file);
+}
+
+// Delete all screenshot documents and wipe match reports (used on reset)
+async function clearRoundArtifacts() {
+    await clearAllScreenshots();
+    await setDoc(doc(db, 'admin', 'matchReports'), { reports: [] });
+}
+
+async function clearAllScreenshots() {
+    for (const team of teams) {
+        try {
+            const snapshot = await getDocs(collection(db, 'teams', team.id, 'screenshots'));
+            const deletions = snapshot.docs.map((docSnap) => deleteDoc(doc(db, 'teams', team.id, 'screenshots', docSnap.id)));
+            await Promise.all(deletions);
+        } catch (error) {
+            console.error('Error clearing screenshots for team', team.id, error);
+            showMessage(`Failed to clear screenshots for ${team.name || team.id}: ${error.message}`, 'error');
+        }
+    }
+}
+
 // Event listeners
 function setupEventListeners() {
     document.getElementById('toggleLockBtn').addEventListener('click', toggleMatchLock);
@@ -591,6 +780,28 @@ function setupEventListeners() {
     document.getElementById('exportCSVBtn').addEventListener('click', exportToCSV);
     document.getElementById('exportJSONBtn').addEventListener('click', exportToJSON);
     document.getElementById('exportPrintBtn').addEventListener('click', exportToPrint);
+
+    // Backup & restore
+    const backupNowBtn = document.getElementById('backupNowBtn');
+    const importBackupBtn = document.getElementById('importBackupBtn');
+    const backupFileInput = document.getElementById('backupFileInput');
+
+    if (backupNowBtn) {
+        backupNowBtn.addEventListener('click', async () => {
+            try {
+                await createRoundBackup('manual');
+                showMessage('✅ Backup downloaded.', 'success');
+            } catch (error) {
+                console.error('Manual backup failed:', error);
+                showMessage('Backup failed: ' + error.message, 'error');
+            }
+        });
+    }
+
+    if (importBackupBtn && backupFileInput) {
+        importBackupBtn.addEventListener('click', () => backupFileInput.click());
+        backupFileInput.addEventListener('change', handleBackupFileSelection);
+    }
     
     // Round configuration
     document.getElementById('saveTeamsBtn').addEventListener('click', saveActiveTeams);
